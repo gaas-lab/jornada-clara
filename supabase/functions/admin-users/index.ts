@@ -43,7 +43,15 @@ Deno.serve(async (request) => {
     .select('role, is_active')
     .eq('id', user.id)
     .maybeSingle();
-  if (actorError) return response(500, { error: 'Não foi possível verificar as permissões.' });
+  if (actorError) {
+    console.error('admin-users: profile permission lookup failed', {
+      code: actorError.code,
+      message: actorError.message,
+      details: actorError.details,
+      hint: actorError.hint,
+    });
+    return response(500, { error: 'Não foi possível verificar as permissões.' });
+  }
   if (!actor?.is_active || actor.role !== 'admin_master') {
     return response(403, { error: 'Somente o Admin Master pode criar contas.' });
   }
