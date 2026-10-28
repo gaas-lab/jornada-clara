@@ -69,7 +69,7 @@ export function lunchMinutes(record, now = new Date()) {
   return elapsedMinutes(lunchStart, lunchEnd);
 }
 
-export function estimatedEnd(record, now = new Date()) {
+export function estimatedEnd(record, now = new Date(), dailyMinutes = DAILY_WORK_MINUTES) {
   if (record.punches.length === 0 || record.punches.length === 4) return null;
 
   let expectedLunch = MIN_LUNCH_MINUTES;
@@ -77,7 +77,7 @@ export function estimatedEnd(record, now = new Date()) {
   if (record.punches.length >= 3) expectedLunch = lunchMinutes(record, now);
 
   const start = new Date(record.punches[0].at).getTime();
-  return new Date(start + (DAILY_WORK_MINUTES + expectedLunch) * 60_000);
+  return new Date(start + (dailyMinutes + expectedLunch) * 60_000);
 }
 
 export function localDateKey(date = new Date()) {

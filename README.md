@@ -10,7 +10,7 @@ Controle interno de jornada para uma única empresa. O primeiro objetivo é apre
 
 ## Estado atual
 
-A tela de marcação usa Supabase Auth e carrega/grava os pontos do dia no banco. A autenticação exige contas criadas pela administração; a primeira conta Admin Master ainda precisa ser criada e promovida conforme `supabase/migrations/README.md`. A tela atual cobre o fluxo individual. Solicitações, gestão de equipe, ausências, calendário e fechamento ainda não têm interface operacional. Não usar este controle interno como REP-P nem como sistema oficial de registro eletrônico de ponto.
+A tela de marcação usa Supabase Auth e carrega/grava os pontos do dia no banco. A aplicação agora inclui navegação por perfil, histórico e saldo mensal, solicitações de ajuste, visão de equipe, aprovações, ausências, gestão de perfis e jornadas, calendário, feriados e fechamento mensal. Os novos fluxos dependem da migração `202610270002_role_workflows.sql`; a criação de contas dentro do app também depende do deploy da Edge Function `admin-users`. Veja `supabase/migrations/README.md`. Não usar este controle interno como REP-P nem como sistema oficial de registro eletrônico de ponto.
 
 ## Regras de jornada acordadas
 

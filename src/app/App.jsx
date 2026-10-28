@@ -15,6 +15,7 @@ import {
   readAttendanceDay,
   registerAttendancePunch,
 } from '../features/attendance/services/supabaseAttendanceStore.js';
+import ManagementPanel from '../features/management/components/ManagementPanel.jsx';
 import { isSupabaseConfigured, supabase } from '../shared/lib/supabase.js';
 import './app.css';
 
@@ -30,6 +31,8 @@ const WEEKEND_FORMAT = new Intl.DateTimeFormat('en-US', {
   timeZone: COMPANY_TIME_ZONE,
   weekday: 'short',
 });
+const ISO_WEEKDAY_BY_LABEL = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 7 };
+const DEFAULT_WORK_DAYS = [1, 2, 3, 4, 5];
 
 const ROLE_LABELS = {
   employee: 'Funcionário',
@@ -37,8 +40,9 @@ const ROLE_LABELS = {
   admin_master: 'Admin Master',
 };
 
-function isWeekend(date) {
-  return ['Sat', 'Sun'].includes(WEEKEND_FORMAT.format(date));
+function isScheduledWorkday(date, workDays) {
+  const day = ISO_WEEKDAY_BY_LABEL[WEEKEND_FORMAT.format(date)];
+  return workDays.includes(day);
 }
 
 function formatSignedMinutes(minutes) {
@@ -118,6 +122,7 @@ export default function App() {
   const [now, setNow] = useState(() => new Date());
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [schedule, setSchedule] = useState(null);
   const [days, setDays] = useState({});
   const [authLoading, setAuthLoading] = useState(isSupabaseConfigured);
   const [profileLoading, setProfileLoading] = useState(false);
@@ -129,6 +134,8 @@ export default function App() {
   const [messageType, setMessageType] = useState('info');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [activeSection, setActiveSection] = useState('ponto');
+  const todayKey = localDateKey(now);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 15_000);
@@ -148,6 +155,7 @@ export default function App() {
       setAuthLoading(false);
       if (!nextSession) {
         setProfile(null);
+        setSchedule(null);
         setDays({});
         setProfileError('');
         setAttendanceError('');
@@ -174,16 +182,18 @@ export default function App() {
     if (!supabase || !session?.user?.id) {
       setProfile(null);
       setProfileLoading(false);
+      setActiveSection('ponto');
       return undefined;
     }
 
     let active = true;
+    setActiveSection('ponto');
     setProfileLoading(true);
     setProfileError('');
 
     supabase
       .from('profiles')
-      .select('id, full_name, role, is_active')
+      .select('id, email, full_name, role, is_active')
       .eq('id', session.user.id)
       .maybeSingle()
       .then(({ data, error }) => {
@@ -206,7 +216,23 @@ export default function App() {
     return () => { active = false; };
   }, [session?.user?.id]);
 
-  const todayKey = localDateKey(now);
+  useEffect(() => {
+    if (!supabase || !profile?.id || !profile.is_active) {
+      setSchedule(null);
+      return undefined;
+    }
+    let active = true;
+    supabase
+      .from('employee_schedules')
+      .select('daily_minutes,work_days,minimum_lunch_minutes,effective_from')
+      .eq('employee_id', profile.id)
+      .lte('effective_from', todayKey)
+      .order('effective_from', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => { if (active) setSchedule(data); });
+    return () => { active = false; };
+  }, [profile?.id, profile?.is_active, todayKey]);
 
   useEffect(() => {
     if (!profile?.id || !profile.is_active) {
@@ -236,10 +262,12 @@ export default function App() {
   const todayRecord = days[todayKey] ?? createDayRecord();
   const next = nextPunch(todayRecord);
   const worked = workedMinutes(todayRecord, now);
-  const estimated = estimatedEnd(todayRecord, now);
-  const weekend = isWeekend(now);
+  const dailyTarget = schedule?.daily_minutes ?? DAILY_WORK_MINUTES;
+  const scheduledDays = schedule?.work_days ?? DEFAULT_WORK_DAYS;
+  const estimated = estimatedEnd(todayRecord, now, dailyTarget);
+  const weekend = !isScheduledWorkday(now, scheduledDays);
   const completed = todayRecord.punches.length === PUNCH_SEQUENCE.length;
-  const progress = Math.min(100, Math.round((worked / DAILY_WORK_MINUTES) * 100));
+  const progress = Math.min(100, Math.round((worked / dailyTarget) * 100));
   const status = useMemo(() => {
     if (weekend) return 'Dia sem expediente';
     if (completed) return 'Jornada encerrada';
@@ -343,6 +371,18 @@ export default function App() {
 
   const completedPunches = new Map(todayRecord.punches.map((punch) => [punch.kind, punch.at]));
   const displayName = profile.full_name || session.user.email;
+  const sections = [
+    { id: 'ponto', label: 'Meu ponto' },
+    { id: 'historico', label: 'Meu histórico' },
+    { id: 'solicitacoes', label: 'Solicitações' },
+    { id: 'perfil', label: 'Meu perfil' },
+    ...(profile.role === 'manager' || profile.role === 'admin_master'
+      ? [{ id: 'equipe', label: 'Equipe' }, { id: 'aprovacoes', label: 'Aprovações' }]
+      : []),
+    ...(profile.role === 'admin_master'
+      ? [{ id: 'pessoas', label: 'Pessoas e jornadas' }, { id: 'calendario', label: 'Calendário' }, { id: 'feriados', label: 'Feriados' }]
+      : []),
+  ];
 
   return (
     <main className="app-shell">
@@ -365,7 +405,23 @@ export default function App() {
         <span>As marcações são salvas no banco da empresa e validadas pelo servidor.</span>
       </section>
 
-      <section className="today-layout" aria-label="Jornada de hoje">
+      <nav className="role-navigation" aria-label="Seções do aplicativo">
+        {sections.map((section) => (
+          <button
+            key={section.id}
+            className={activeSection === section.id ? 'role-navigation__item role-navigation__item--active' : 'role-navigation__item'}
+            type="button"
+            aria-current={activeSection === section.id ? 'page' : undefined}
+            onClick={() => setActiveSection(section.id)}
+          >
+            {section.label}
+          </button>
+        ))}
+      </nav>
+
+      {activeSection !== 'ponto' && <ManagementPanel section={activeSection} profile={profile} />}
+
+      {activeSection === 'ponto' && <section className="today-layout" aria-label="Jornada de hoje">
         <div className="today-main">
           <div className="date-row">
             <div>
@@ -384,7 +440,7 @@ export default function App() {
 
           <div className="work-summary">
             <div className="work-summary__value">{formatMinutes(worked)}</div>
-            <div className="work-summary__caption">trabalhadas de {formatMinutes(DAILY_WORK_MINUTES)}</div>
+            <div className="work-summary__caption">trabalhadas de {formatMinutes(dailyTarget)}</div>
             <div className="progress-track" aria-label={`${progress}% da jornada cumprida`}>
               <span style={{ width: `${progress}%` }} />
             </div>
@@ -451,12 +507,12 @@ export default function App() {
             <p className="section-label">Resumo diário</p>
             <h3 id="balance-title">Saldo de hoje</h3>
             <div className="balance-value">
-              {completed ? formatSignedMinutes(worked - DAILY_WORK_MINUTES) : 'Em andamento'}
+              {completed ? formatSignedMinutes(worked - dailyTarget) : 'Em andamento'}
             </div>
-            <p>{completed ? 'Comparado à jornada diária de 8h48min.' : 'O saldo é calculado ao finalizar as quatro marcações.'}</p>
+            <p>{completed ? `Comparado à jornada diária de ${formatMinutes(dailyTarget)}.` : 'O saldo é calculado ao finalizar as quatro marcações.'}</p>
           </section>
         </aside>
-      </section>
+      </section>}
 
       <footer className="app-footer">
         <span>Uma empresa · jornada flexível · segunda a sexta</span>

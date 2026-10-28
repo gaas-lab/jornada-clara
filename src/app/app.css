@@ -300,6 +300,80 @@
   font-size: 0.78rem;
 }
 
+.role-navigation {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 22px;
+  padding-bottom: 10px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.role-navigation__item {
+  flex: 0 0 auto;
+  min-height: 39px;
+  padding: 8px 13px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 650;
+}
+
+.role-navigation__item:hover { background: #eef1f3; color: var(--color-text); }
+.role-navigation__item--active { border-color: #b9d8cf; background: var(--color-accent-soft); color: var(--color-accent-strong); }
+
+.management-section { display: grid; gap: 18px; }
+.management-heading { margin: 0 0 2px; }
+.management-heading h2 { margin: 0; color: var(--color-text); font-size: clamp(1.35rem, 3vw, 1.8rem); letter-spacing: -0.04em; }
+.management-heading > p:last-child { max-width: 780px; margin: 8px 0 0; color: var(--color-muted); line-height: 1.5; }
+.management-section > h3, .management-form h3 { margin: 4px 0 0; color: var(--color-text); font-size: 1.02rem; }
+.management-toolbar, .management-actions, .inline-actions { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; }
+.management-toolbar { justify-content: space-between; }
+.management-actions { align-items: center; }
+.management-field { display: grid; min-width: min(240px, 100%); gap: 6px; color: var(--color-text); font-size: 0.83rem; font-weight: 650; }
+.management-field input, .management-field select, .management-field textarea {
+  width: 100%; min-height: 42px; padding: 9px 11px; border: 1px solid var(--color-border); border-radius: 8px; background: #fff; color: var(--color-text);
+}
+.management-field textarea { min-height: 82px; resize: vertical; }
+.management-field input:focus-visible, .management-field select:focus-visible, .management-field textarea:focus-visible { border-color: var(--color-accent); outline: 3px solid var(--color-accent-soft); }
+.management-field small, .management-help { color: var(--color-muted); font-size: 0.78rem; font-weight: 400; line-height: 1.45; }
+.management-button { min-height: 40px; padding: 8px 13px; border: 1px solid #c7d1d7; border-radius: 8px; background: #fff; color: var(--color-text); cursor: pointer; font-size: 0.84rem; font-weight: 650; }
+.management-button:hover:not(:disabled) { border-color: var(--color-accent); background: #f4faf8; }
+.management-button:disabled { opacity: 0.55; cursor: not-allowed; }
+.management-form, .calendar-lock-card { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; gap: 14px; padding: 18px; border: 1px solid var(--color-border); border-radius: 14px; background: #fff; }
+.management-form h3, .management-form > .feedback, .management-form > .management-actions { grid-column: 1 / -1; }
+.management-field--wide { grid-column: 1 / -1; }
+.management-check { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.management-check input, .weekday-options input { accent-color: var(--color-accent); }
+.weekday-options { display: flex; flex-wrap: wrap; gap: 9px 15px; }
+.weekday-options label { display: flex; align-items: center; gap: 6px; font-size: 0.83rem; font-weight: 500; }
+.management-table-wrap { overflow-x: auto; border: 1px solid var(--color-border); border-radius: 12px; background: #fff; }
+.management-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+.management-table th, .management-table td { padding: 11px 12px; border-bottom: 1px solid #edf0f2; text-align: left; vertical-align: top; }
+.management-table th { background: #f8faf9; color: var(--color-muted); font-size: 0.74rem; letter-spacing: 0.03em; text-transform: uppercase; white-space: nowrap; }
+.management-table tr:last-child td { border-bottom: 0; }
+.management-table button { min-height: 32px; padding: 5px 9px; border: 1px solid var(--color-border); border-radius: 7px; background: #fff; color: var(--color-text); cursor: pointer; }
+.management-table button:hover { border-color: var(--color-accent); }
+.inline-actions { align-items: center; gap: 6px; }
+.summary-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.summary-cards > div { display: grid; gap: 8px; padding: 16px; border: 1px solid var(--color-border); border-radius: 12px; background: #fff; }
+.summary-cards span { color: var(--color-muted); font-size: 0.8rem; }
+.summary-cards strong { color: var(--color-text); font-size: 1.35rem; font-variant-numeric: tabular-nums; }
+.management-empty { padding: 18px; border: 1px dashed #cbd3d8; border-radius: 10px; color: var(--color-muted); }
+.calendar-lock-card { align-items: start; }
+.calendar-lock-card > strong { font-size: 1.3rem; }
+.calendar-lock-card > span, .calendar-lock-card > small, .calendar-lock-card > .management-actions { grid-column: 1 / -1; }
+.calendar-lock-card > span, .calendar-lock-card > small { color: var(--color-muted); }
+
+@media print {
+  .app-header button, .role-navigation, .management-actions, .management-form, .app-footer { display: none !important; }
+  .app-shell { width: 100%; padding: 0; }
+  .management-table-wrap, .summary-cards > div { border-color: #bbb; box-shadow: none; }
+}
+
 @media (max-width: 760px) {
   .app-shell { padding: 22px 16px; }
   .today-layout { grid-template-columns: 1fr; }
@@ -307,6 +381,14 @@
   .signed-in-user { gap: 8px; }
   .signed-in-user > div { max-width: 180px; }
   .signed-in-user strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+@media (max-width: 560px) {
+  .management-form, .calendar-lock-card { grid-template-columns: 1fr; padding: 14px; }
+  .management-field--wide, .management-form h3, .management-form > .feedback, .management-form > .management-actions, .calendar-lock-card > span, .calendar-lock-card > small, .calendar-lock-card > .management-actions { grid-column: auto; }
+  .summary-cards { grid-template-columns: 1fr; }
+  .management-toolbar { align-items: stretch; flex-direction: column; }
+  .management-toolbar .management-field { min-width: 100%; }
 }
 
 @media (max-width: 480px) {
