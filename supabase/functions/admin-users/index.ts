@@ -89,8 +89,8 @@ Deno.serve(async (request) => {
       .eq('id', input.manager_id)
       .maybeSingle();
     if (managerError) return response(500, { error: 'Não foi possível validar o gestor responsável.' });
-    if (!manager || !manager.is_active || manager.role !== 'manager') {
-      return response(400, { error: 'O gestor selecionado não está ativo ou não tem perfil de Gestor.' });
+    if (!manager || !manager.is_active || !['manager', 'admin_master'].includes(manager.role)) {
+      return response(400, { error: 'O responsável selecionado não está ativo ou não tem perfil de Gestor ou Admin Master.' });
     }
   }
 

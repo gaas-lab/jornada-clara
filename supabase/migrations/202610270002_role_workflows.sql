@@ -286,7 +286,7 @@ begin
         raise exception 'Já existe uma marcação nesta posição da sequência.';
       end if;
       if (select count(*) from public.attendance_punches p where p.employee_id = req.employee_id and p.work_date = req.work_date and not p.is_voided and p.sequence_no < case req.requested_kind when 'work_start' then 1 when 'lunch_start' then 2 when 'lunch_end' then 3 else 4 end) <>
-         case req.requested_kind when 'work_start' then 0 when 'lunch_start' then 1 when 'lunch_end' then 2 else 3 end then
+         (case req.requested_kind when 'work_start' then 0 when 'lunch_start' then 1 when 'lunch_end' then 2 else 3 end) then
         raise exception 'As marcações anteriores da sequência precisam existir antes desta inclusão.';
       end if;
       select p.punched_at into previous_at from public.effective_attendance_punches p

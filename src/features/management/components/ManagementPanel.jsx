@@ -113,6 +113,9 @@ function signedMinutes(value) {
 
 function noticeFromError(error) {
   const message = error?.message || String(error || 'Ocorreu um erro inesperado.');
+  if (/edge function.*not found|function .*not found|failed to send a request to the edge function/i.test(message)) {
+    return 'A criação de usuários depende da Edge Function admin-users no Supabase. Publique a função no projeto Jornada Clara e tente novamente.';
+  }
   if (/function .* not found|schema cache|could not find the function/i.test(message)) {
     return 'O banco ainda não recebeu a migração dos fluxos por perfil. Aplique 202610270002_role_workflows.sql no SQL Editor do Supabase e tente novamente.';
   }
@@ -399,7 +402,7 @@ function AdminPeople({ profile }) {
   const [feedback, setFeedback] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const managerOptions = people.data.filter((person) => person.role === 'manager' && person.is_active && person.id !== selectedId);
+  const managerOptions = people.data.filter((person) => ['manager', 'admin_master'].includes(person.role) && person.is_active && person.id !== selectedId);
   const selectedPerson = people.data.find((person) => person.id === selectedId);
   const selectedSchedule = schedules.data.find((item) => item.employee_id === selectedId);
 

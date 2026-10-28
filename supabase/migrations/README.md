@@ -27,8 +27,9 @@ where id = '<UUID_DA_CONTA_INICIAL>';
 ## Publicar os fluxos por perfil
 
 1. Revise `202610270002_role_workflows.sql` e aplique-o ao projeto Jornada Clara pelo SQL Editor. Ele adiciona as RPCs de solicitação/aprovação, equipe, jornada, calendário, feriados e fechamento mensal. A view `effective_attendance_punches` aplica as correções aprovadas sem substituir a marcação original.
-2. Faça deploy da função pelo Supabase CLI: `supabase functions deploy admin-users --project-ref ebgdgyxxrhsohqbrdpdh`. Ela usa `SUPABASE_SERVICE_ROLE_KEY` somente no ambiente das Edge Functions; nunca defina essa chave na Vercel nem no frontend.
-3. As variáveis `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` ficam no ambiente Preview/Production da Vercel conforme a implantação. A chave publicável é destinada ao cliente; a chave `service_role` não é.
+2. Para permitir Admin Master como gestor responsável, aplique também `202610280001_allow_admin_master_responsible.sql`.
+3. Faça deploy da função pelo Supabase CLI: `supabase functions deploy admin-users --project-ref ebgdgyxxrhsohqbrdpdh`. Ela usa `SUPABASE_SERVICE_ROLE_KEY` somente no ambiente das Edge Functions; nunca defina essa chave na Vercel nem no frontend.
+4. As variáveis `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` ficam no ambiente Preview/Production da Vercel conforme a implantação. A chave publicável é destinada ao cliente; a chave `service_role` não é.
 
 O Admin Master pode criar contas, ajustar perfil/equipe/jornada e desativar acessos. A desativação mantém o histórico e substitui a exclusão definitiva da conta. A importação do calendário preenche os feriados nacionais fixos e calcula a Paixão de Cristo do ano selecionado. Feriados estaduais e municipais ficam fora desse modelo.
 
